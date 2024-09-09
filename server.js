@@ -11,13 +11,13 @@ const HLS_PATH = path.join(__dirname, 'public');
 
 // Middleware to add CORS headers
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Allow specific methods
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow specific headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(HLS_PATH));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -30,46 +30,48 @@ app.get("/views", (req, res) => {
     return res.render('views');
 });
 
-const wss = new WebSocket.Server({ server: app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-}) });
+});
+
+const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
     console.log('Client connected');
 
-    // Create a pass-through stream to pipe WebSocket data to FFmpeg
+    // Create a PassThrough stream to handle WebSocket data
     const inputStream = new PassThrough();
 
-    // Set up FFmpeg to convert the input stream to HLS
+    // Start FFmpeg to convert the incoming WebSocket stream to HLS segments
     const ffmpegCommand = ffmpeg(inputStream)
         .inputFormat('webm') // Assuming the input format is WebM
+        .videoCodec('copy')   // Copy the video codec directly (no re-encoding)
+        .audioCodec('copy')   // Copy the audio codec directly (no re-encoding)
         .outputOptions([
-            '-c:v libx264', // Codec for video
-            '-c:a aac', // Codec for audio
-            '-f hls', // Format for HLS
-            '-hls_time 10', // Segment length in seconds
-            '-hls_list_size 0', // Unlimited playlist size
-            '-hls_segment_filename', path.join(HLS_PATH, 'segment_%03d.ts') // Path for segment files
+            '-hls_time 10', // Segment duration
+            '-hls_list_size 0', // Unlimited playlist size (VOD)
+            '-hls_flags delete_segments', // Delete segments after they're no longer in the playlist
         ])
         .output(path.join(HLS_PATH, 'index.m3u8'))
-        .on('end', () => {
-            console.log('HLS conversion completed');
+        .on('start', () => {
+            console.log('FFmpeg started');
         })
         .on('error', (err) => {
             console.error('FFmpeg error:', err);
         })
-        .run();
+        .run(); // Start FFmpeg
 
     ws.on('message', (data) => {
-        inputStream.write(data);
+        inputStream.write(data); // Write WebSocket data to the PassThrough stream
     });
 
     ws.on('close', () => {
         console.log('Client disconnected');
-        inputStream.end();
+        inputStream.end(); // End the stream to signal FFmpeg to stop
     });
 
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);
+        inputStream.end(); // End the stream on error
     });
 });
