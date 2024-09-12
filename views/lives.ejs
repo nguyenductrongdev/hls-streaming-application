@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Stream to Server</title>
+    <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet" />
+</head>
+<body>
+    <h1>Media Stream to Server</h1>
+    <video id="local-video" autoplay muted></video>
+    
+    <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
+    <script>
+        // Step 1: Capture the Media Stream
+        async function startStreaming() {
+            try {
+                // Capture media stream (e.g., webcam)
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+                // Display the local stream
+                const videoElement = document.getElementById('local-video');
+                videoElement.srcObject = stream;
+
+                // Step 2: Send the Media Stream to the Server via WebSocket
+                sendStreamToServer(stream);
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+            }
+        }
+
+        // Set up WebSocket connection and send media data
+        function sendStreamToServer(stream) {
+            const socket = new WebSocket('ws://localhost:3107');
+
+            socket.onopen = () => {
+                console.log('WebSocket connection opened');
+                const mediaRecorder = new MediaRecorder(stream);
+
+                // Capture data chunks and send to the server
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        socket.send(event.data);
+                    }
+                };
+
+                mediaRecorder.start(10_000); // Record and send in 100ms chunks
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            socket.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+        }
+
+        // Start the streaming process when the page loads
+        window.onload = startStreaming;
+    </script>
+</body>
+</html>

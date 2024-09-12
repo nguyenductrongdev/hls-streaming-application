@@ -12,16 +12,10 @@
 <body>
     <h1>Live Stream Viewer</h1>
     <video id="video" class="video-js vjs-default-skin" controls autoplay>
-        <!-- Update the src URL to match your server's IP and port -->
         <source src="http://192.168.2.128:3107/index.m3u8" type="application/x-mpegURL">
     </video>
     <script>
-        var player = videojs('video', {
-            autoplay: true,
-            liveui: true, // Show the live UI controls in the player
-        });
-
-        player.play(); // Start playing automatically
+        var player = videojs('video');
     </script>
 </body>
 </html>
