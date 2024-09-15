@@ -48,11 +48,11 @@ wss.on('connection', (ws) => {
         .videoCodec('copy')   // Copy the video codec directly (no re-encoding)
         .audioCodec('copy')   // Copy the audio codec directly (no re-encoding)
         .outputOptions([
-            '-hls_time 10', // Segment duration
-            '-hls_list_size 0', // Unlimited playlist size (VOD)
-            '-hls_flags delete_segments', // Delete segments after they're no longer in the playlist
+            '-hls_time 5',
+            '-hls_list_size 0',
+            '-hls_flags delete_segments+independent_segments+append_list',
         ])
-        .output(path.join(HLS_PATH, 'index.m3u8'))
+        .output(path.join(HLS_PATH, 'record.m3u8'))
         .on('start', () => {
             console.log('FFmpeg started');
         })
