@@ -50,7 +50,7 @@ wss.on('connection', (ws) => {
         .outputOptions([
             '-hls_time 5',
             '-hls_list_size 0',
-            '-hls_flags delete_segments+independent_segments+append_list',
+            '-hls_flags delete_segments+append_list',
         ])
         .output(path.join(HLS_PATH, 'record.m3u8'))
         .on('start', () => {
