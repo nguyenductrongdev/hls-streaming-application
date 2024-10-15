@@ -12,6 +12,8 @@
     
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
+        const currentUrl = new URLSearchParams(window.location.search);
+
         // Step 1: Capture the Media Stream
         async function startStreaming() {
             try {
@@ -31,20 +33,24 @@
 
         // Set up WebSocket connection and send media data
         function sendStreamToServer(stream) {
-            const socket = new WebSocket('ws://localhost:3107');
+            const socket = new WebSocket('ws://192.168.2.128:3107');
 
             socket.onopen = () => {
                 console.log('WebSocket connection opened');
+
+                let roomId = currentUrl.get("roomId") || "default";
+                socket.send(JSON.stringify({ topic: "start", data: roomId }));
+
                 const mediaRecorder = new MediaRecorder(stream);
 
                 // Capture data chunks and send to the server
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
-                        socket.send(event.data);
+                        socket.send(event.data); // Send binary data directly
                     }
                 };
 
-                mediaRecorder.start(10_000); // Record and send in 100ms chunks
+                mediaRecorder.start(5_000);
             };
 
             socket.onerror = (error) => {

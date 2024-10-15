@@ -1,26 +1,27 @@
 # Introduction
-The simple livestream application based on HLS technology
+The minimal livestream application based on HLS technology
 
-# Quick note
-Some note in development time
+# Setup
+Check for current installation:
+```sh
+node -v # check for node version
+npm -v # check for npm version
+ffmpeg -version # check for ffmpeg version
 ```
-ffmpeg -i rtmp://localhost/live/40db75fa-9895-4f33-9763-d8038e2eb0f7 -c copy -f hls /usr/local/nginx/html/hls/40db75fa-9895-4f33-9763-d8038e2eb0f7.m3u8
+Installing the necessary packages and starting the application:
+```sh
+sudo apt install nodejs npm -y # install nodejs and npm if not already installed
+sudo apt install ffmpeg -y # install ffmpeg if not already installed
+git clone https://github.com/nguyenductrongdev/hls-streaming-application.git
+cd hls-streaming-application
+npm install # install all application dependencies/packages
+npm start # start the application
 ```
-```
-systemctl reload nginx
-```
-Check nginx conf
-```
-sudo nginx -t
-```
-```
-rm /etc/nginx/nginx.conf
-```
-## Copy
-```
-sudo cp /home/ndtrong/hls/tools/nginx.conf /etc/nginx/nginx.conf
-```
-## Find
-```
-sudo find / -type d -name "ngx_rtmp_module"
-```
+Replace all the `192.168.2.128` by actual local VM IP on `lives.ejs`, `views.ejs`, `lives.html`  
+Notice: For security reasons, the media stream only acceces by localhost or https protocol, so the `GET /views` will not be working properly, please use the `lives.html` instead if accessing from another host.
+
+# Personal note
+Apply new conf: `systemctl reload nginx`  
+Check nginx conf: `sudo nginx -t`  
+NginX conf location: `/etc/nginx/nginx.conf`  
+Find by filename: `sudo find / -type d -name "ngx_rtmp_module"`
