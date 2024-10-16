@@ -10,17 +10,44 @@
 
 <body>
     <h1>Media Stream to Server</h1>
+    <select id="optCamera">
+        <option value="">Select Camera</option>
+    </select>
     <video id="local-video" autoplay muted></video>
     <button id="btnEnd">End</button>
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
         const currentUrl = new URLSearchParams(window.location.search);
         let stream;
+        let mediaRecorder;
+        let mediaVideoDevices = [];
+        let mediaAudioDevices = [];
+
         // Step 1: Capture the Media Stream
         async function startStreaming() {
             try {
                 // Capture media stream (e.g., webcam)
                 stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                navigator.mediaDevices.enumerateDevices()
+                    .then(devices => {
+                        devices.forEach(device => {
+                            console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
+                            if (device.kind === 'videoinput') {
+                                mediaVideoDevices.push(device);
+                            } else if (device.kind === 'audioinput') {
+                                mediaAudioDevices.push(device);
+                            }
+                        });
+                    })
+                    .then(() => {
+                        console.log(mediaVideoDevices[0].label);
+                        document.querySelector('#optCamera').innerHTML = mediaVideoDevices
+                            .map(device => `<option value=${device.label}>${device.label}</option>`)
+                            .join('');
+                    })
+                    .catch(err => {
+                        console.error("Error accessing media devices:", err);
+                    });
 
                 // Display the local stream
                 const videoElement = document.getElementById('local-video');
@@ -43,7 +70,7 @@
                 let roomId = currentUrl.get("roomId") || "default";
                 socket.send(JSON.stringify({ topic: "start", data: roomId }));
 
-                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder = new MediaRecorder(stream);
 
                 // Capture data chunks and send to the server
                 mediaRecorder.ondataavailable = (event) => {
@@ -69,6 +96,7 @@
 
         document.querySelector("#btnEnd").addEventListener("click", function (event) {
             stream.getTracks().forEach(track => track.stop());
+            mediaRecorder.stop();
         });
     </script>
 </body>
