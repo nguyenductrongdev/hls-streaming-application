@@ -1,9 +1,13 @@
 const express = require('express');
 const WebSocket = require('ws');
 const fs = require('fs');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 const path = require('path');
 const { PassThrough } = require('stream');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = 3107;
@@ -21,6 +25,27 @@ app.use(express.static(HLS_PATH));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+app
+    .post("/api/lives", (req, res) => {
+        let roomId = uuidv4();
+        return res.json({
+            hostlink: `/lives?roomId=${roomId}`,
+            viewlink: `/views?roomId=${roomId}`
+        });
+    })
+    .get("/api/lives/:roomId", (req, res) => {
+        let { roomId } = req.params;
+        return res.json({
+            hostlink: `/lives?roomId=${roomId}`,
+            viewlink: `/views?roomId=${roomId}`
+        });
+    });
+
+app.get("/", (req, res) => {
+    return res.render('index');
+});
+
 
 app.get("/lives", (req, res) => {
     return res.render('lives');

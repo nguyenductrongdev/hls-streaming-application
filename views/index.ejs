@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livestream application</title>
+</head>
+
+<body>
+    <button id="btnLives">Start a new livestream</button>
+    <hr />
+    <input type="text" id="txtRoomId" />
+    <button id="btnViews">Join a livestream</button>
+
+    <script>
+        document.querySelector("#btnLives").addEventListener("click", function (e) {
+            const requestOptions = {
+                method: "POST",
+                redirect: "follow"
+            };
+
+            fetch("http://localhost:3107/api/lives", requestOptions)
+                .then((response) => response.json())
+                .then((result) => {
+                    let { hostlink, viewlink } = result;
+                    window.location.href = hostlink;
+                })
+                .catch((error) => console.error(error));
+        });
+
+        document.querySelector("#btnViews").addEventListener("click", function (e) {
+            let roomId = document.querySelector("#txtRoomId").value;
+            if (roomId === "") {
+                alert("Please enter the room id");
+                return;
+            }
+            const requestOptions = {
+                method: "GET"
+            };
+            fetch("http://localhost:3107/api/lives/" + roomId, requestOptions)
+                .then((response) => response.json())
+                .then((result) => {
+                    let { hostlink, viewlink } = result;
+                    window.location.href = viewlink;
+                })
+                .catch((error) => console.error(error));
+        });
+    </script>
+</body>
+
+</html>

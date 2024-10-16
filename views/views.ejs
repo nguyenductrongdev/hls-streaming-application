@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Live Stream Viewer</title>
     <link href="https://vjs.zencdn.net/7.20.2/video-js.css" rel="stylesheet" />
     <script src="https://vjs.zencdn.net/7.20.2/video.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        #video { width: 80%; max-width: 800px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        #video {
+            width: 80%;
+            max-width: 800px;
+        }
     </style>
 </head>
+
 <body>
     <h1>Live Stream Viewer</h1>
     <video id="video" class="video-js vjs-default-skin" controls autoplay>
@@ -16,9 +26,9 @@
         <script>
             const currentUrl = new URLSearchParams(window.location.search);
             let roomId = currentUrl.get("roomId") || "default";
-            document.write(`<source src="http://192.168.2.128:3107/${roomId}/record.m3u8" type="application/x-mpegURL">`);
+            document.write(`<source src="http://localhost:3107/${roomId}/record.m3u8" type="application/x-mpegURL">`);
         </script>
-        
+
     </video>
     <script>
         var player = videojs('video', {
@@ -29,4 +39,5 @@
         player.play(); // Start playing automatically
     </script>
 </body>
+
 </html>
