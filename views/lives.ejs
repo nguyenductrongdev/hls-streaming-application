@@ -14,10 +14,12 @@
         <option value="">Select Camera</option>
     </select>
     <video id="local-video" autoplay muted></video>
+    <button id="btnToggleCamera" data-active="true">Toggle camera</button>
     <button id="btnEnd">End</button>
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
         const currentUrl = new URLSearchParams(window.location.search);
+        let socket;
         let stream;
         let mediaRecorder;
         let mediaVideoDevices = [];
@@ -62,7 +64,7 @@
 
         // Set up WebSocket connection and send media data
         function sendStreamToServer(stream) {
-            const socket = new WebSocket('ws://localhost:3107');
+            socket = new WebSocket('ws://localhost:3107');
 
             socket.onopen = () => {
                 console.log('WebSocket connection opened');
@@ -95,8 +97,16 @@
         window.onload = startStreaming;
 
         document.querySelector("#btnEnd").addEventListener("click", function (event) {
+            socket.close();
             stream.getTracks().forEach(track => track.stop());
             mediaRecorder.stop();
+        });
+
+        document.querySelector("#btnToggleCamera").addEventListener("click", function (event) {
+            let currentState = this.getAttribute('data-active') === 'true';
+            let nextState = !currentState;
+            stream.getVideoTracks().forEach(track => track.enabled = nextState);
+            this.setAttribute('data-active', String(nextState));
         });
     </script>
 </body>

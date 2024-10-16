@@ -11,7 +11,8 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = 3107;
-const HLS_PATH = path.join(__dirname, 'public');
+const PUBLIC_PATH = path.join(__dirname, 'public');
+const HLS_PATH = path.join(PUBLIC_PATH, 'livestreams');
 
 // Middleware to add CORS headers
 app.use((req, res, next) => {
@@ -21,7 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(HLS_PATH));
+app.use(express.static(PUBLIC_PATH));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
