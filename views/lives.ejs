@@ -11,16 +11,16 @@
 <body>
     <h1>Media Stream to Server</h1>
     <video id="local-video" autoplay muted></video>
-
+    <button id="btnEnd">End</button>
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
         const currentUrl = new URLSearchParams(window.location.search);
-
+        let stream;
         // Step 1: Capture the Media Stream
         async function startStreaming() {
             try {
                 // Capture media stream (e.g., webcam)
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
                 // Display the local stream
                 const videoElement = document.getElementById('local-video');
@@ -66,6 +66,10 @@
 
         // Start the streaming process when the page loads
         window.onload = startStreaming;
+
+        document.querySelector("#btnEnd").addEventListener("click", function (event) {
+            stream.getTracks().forEach(track => track.stop());
+        });
     </script>
 </body>
 
