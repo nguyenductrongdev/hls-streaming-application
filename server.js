@@ -31,6 +31,7 @@ app
     .post("/api/lives", (req, res) => {
         let roomId = uuidv4();
         return res.json({
+            id: roomId,
             hostlink: `/lives?roomId=${roomId}`,
             viewlink: `/views?roomId=${roomId}`
         });
@@ -38,6 +39,7 @@ app
     .get("/api/lives/:roomId", (req, res) => {
         let { roomId } = req.params;
         return res.json({
+            id: roomId,
             hostlink: `/lives?roomId=${roomId}`,
             viewlink: `/views?roomId=${roomId}`
         });
@@ -46,7 +48,6 @@ app
 app.get("/", (req, res) => {
     return res.render('index');
 });
-
 
 app.get("/lives", (req, res) => {
     return res.render('lives');
@@ -95,7 +96,7 @@ wss.on('connection', (ws) => {
                 .videoCodec('copy')
                 .audioCodec('copy')
                 .outputOptions([
-                    '-hls_time 5',
+                    '-hls_time 10',
                     '-hls_list_size 0',
                     '-hls_flags delete_segments+append_list',
                 ])

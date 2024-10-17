@@ -8,12 +8,34 @@
 </head>
 
 <body>
-    <button id="btnLives">Start a new livestream</button>
-    <hr />
-    <input type="text" id="txtRoomId" />
-    <button id="btnViews">Join a livestream</button>
+    <section>
+        <button id="btnLives">Start a new livestream</button>
+        <input type="text" id="txtRoomId" />
+        <button id="btnViews">Join a livestream</button>
+    </section>
+    <section>
+        <span id="room-id"></span>
+        <iframe src="" frameborder="0" id="ifrLivestream" style="width: 100vw; height: 70vh;"></iframe>
+    </section>
+    <section>
+        <select id="optCamera">
+            <option value="">Select Camera</option>
+        </select>
+        <select id="optMic">
+            <option value="">Select Micro</option>
+        </select>
+        <button id="btnDisableCamera">disable camera</button>
+        <button id="btnEnableCamera">enable camera</button>
+        <button id="btnMuteMic">mute</button>
+        <button id="btnUnmuteMic">unmute</button>
+        <button id="btnEnd">End</button>
+    </section>
 
     <script>
+        const iframe = document.getElementById('ifrLivestream');
+        let mediaVideoDevices = [];
+        let mediaAudioDevices = [];
+
         document.querySelector("#btnLives").addEventListener("click", function (e) {
             const requestOptions = {
                 method: "POST",
@@ -23,8 +45,9 @@
             fetch("http://localhost:3107/api/lives", requestOptions)
                 .then((response) => response.json())
                 .then((result) => {
-                    let { hostlink, viewlink } = result;
-                    window.location.href = hostlink;
+                    let { id, hostlink, viewlink } = result;
+                    document.querySelector('#ifrLivestream').setAttribute('src', hostlink);
+                    document.querySelector('#room-id').innerText = "Room ID: " + id;
                 })
                 .catch((error) => console.error(error));
         });
@@ -41,10 +64,54 @@
             fetch("http://localhost:3107/api/lives/" + roomId, requestOptions)
                 .then((response) => response.json())
                 .then((result) => {
-                    let { hostlink, viewlink } = result;
-                    window.location.href = viewlink;
+                    let { id, hostlink, viewlink } = result;
+                    document.querySelector('#ifrLivestream').setAttribute('src', viewlink);
+                    document.querySelector('#room-id').innerText = "Room ID: " + id;
                 })
                 .catch((error) => console.error(error));
+        });
+
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                devices.forEach(device => {
+                    console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
+                    if (device.kind === 'videoinput') {
+                        mediaVideoDevices.push(device);
+                    } else if (device.kind === 'audioinput') {
+                        mediaAudioDevices.push(device);
+                    }
+                });
+            })
+            .then(() => {
+                document.querySelector('#optCamera').innerHTML = mediaVideoDevices
+                    .map(device => `<option value=${device.label}>${device.label}</option>`)
+                    .join('');
+                document.querySelector('#optMic').innerHTML = mediaAudioDevices
+                    .map(device => `<option value=${device.label}>${device.label}</option>`)
+                    .join('');
+            })
+            .catch(err => {
+                console.error("Error accessing media devices:", err);
+            });
+
+        document.querySelector("#btnDisableCamera").addEventListener("click", function (event) {
+            iframe.contentWindow.postMessage({ name: 'disableCamera', payload: null }, '*');
+        });
+
+        document.querySelector("#btnEnableCamera").addEventListener("click", function (event) {
+            iframe.contentWindow.postMessage({ name: 'enableCamera', payload: null }, '*');
+        });
+
+        document.querySelector("#btnMuteMic").addEventListener("click", function (event) {
+            iframe.contentWindow.postMessage({ name: 'muteMic', payload: null }, '*');
+        });
+
+        document.querySelector("#btnUnmuteMic").addEventListener("click", function (event) {
+            iframe.contentWindow.postMessage({ name: 'unmuteMic', payload: null }, '*');
+        });
+
+        document.querySelector("#btnEnd").addEventListener("click", function (event) {
+            iframe.contentWindow.postMessage({ name: 'end', payload: null }, '*');
         });
     </script>
 </body>

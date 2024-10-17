@@ -9,23 +9,7 @@
 </head>
 
 <body>
-    <h1>Media Stream to Server</h1>
     <video id="local-video" autoplay muted></video>
-    <hr />
-    <div>
-        <p>Live controls</p>
-        <select id="optCamera">
-            <option value="">Select Camera</option>
-        </select>
-        <select id="optMic">
-            <option value="">Select Micro</option>
-        </select>
-        <button id="btnDisableCamera">disable camera</button>
-        <button id="btnEnableCamera">enable camera</button>
-        <button id="btnMuteMic">mute</button>
-        <button id="btnUnmuteMic">unmute</button>
-        <button id="btnEnd">End</button>
-    </div>
 
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
@@ -33,36 +17,12 @@
         let socket;
         let stream;
         let mediaRecorder;
-        let mediaVideoDevices = [];
-        let mediaAudioDevices = [];
 
         // Step 1: Capture the Media Stream
         async function startStreaming() {
             try {
                 // Capture media stream (e.g., webcam)
                 stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                navigator.mediaDevices.enumerateDevices()
-                    .then(devices => {
-                        devices.forEach(device => {
-                            console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
-                            if (device.kind === 'videoinput') {
-                                mediaVideoDevices.push(device);
-                            } else if (device.kind === 'audioinput') {
-                                mediaAudioDevices.push(device);
-                            }
-                        });
-                    })
-                    .then(() => {
-                        document.querySelector('#optCamera').innerHTML = mediaVideoDevices
-                            .map(device => `<option value=${device.label}>${device.label}</option>`)
-                            .join('');
-                        document.querySelector('#optMic').innerHTML = mediaAudioDevices
-                            .map(device => `<option value=${device.label}>${device.label}</option>`)
-                            .join('');
-                    })
-                    .catch(err => {
-                        console.error("Error accessing media devices:", err);
-                    });
 
                 // Display the local stream
                 const videoElement = document.getElementById('local-video');
@@ -94,7 +54,7 @@
                     }
                 };
 
-                mediaRecorder.start(5_000);
+                mediaRecorder.start(10_000);
             };
 
             socket.onerror = (error) => {
@@ -109,28 +69,32 @@
         // Start the streaming process when the page loads
         window.onload = startStreaming;
 
-        // Lives controls
-        document.querySelector("#btnEnd").addEventListener("click", function (event) {
-            socket.close();
-            stream.getTracks().forEach(track => track.stop());
-            mediaRecorder.stop();
+        window.addEventListener('message', function (event) {
+            console.log(event);
+
+            let { name, payload } = event.data;
+            switch (name) {
+                case 'disableCamera':
+                    disableCamera();
+                    break;
+                case 'enableCamera':
+                    enableCamera();
+                    break;
+                case 'muteMic':
+                    muteMic();
+                    break;
+                case 'unmuteMic':
+                    unmuteMic();
+                    break;
+                case 'end':
+                    endLive();
+                    break;
+                default:
+                    console.warn('Unknown message');
+                    break;
+            }
         });
 
-        document.querySelector("#btnDisableCamera").addEventListener("click", function (event) {
-            disableCamera();
-        });
-
-        document.querySelector("#btnEnableCamera").addEventListener("click", function (event) {
-            enableCamera();
-        });
-
-        document.querySelector("#btnMuteMic").addEventListener("click", function (event) {
-            muteAudio();
-        });
-
-        document.querySelector("#btnUnmuteMic").addEventListener("click", function (event) {
-            unmuteAudio();
-        });
 
         function disableCamera() {
             stream.getVideoTracks().forEach(track => track.enabled = false);
@@ -140,12 +104,18 @@
             stream.getVideoTracks().forEach(track => track.enabled = true);
         }
 
-        function muteAudio() {
+        function muteMic() {
             stream.getAudioTracks().forEach(track => track.enabled = false);
         }
 
-        function unmuteAudio() {
+        function unmuteMic() {
             stream.getAudioTracks().forEach(track => track.enabled = true);
+        }
+
+        function endLive() {
+            socket.close();
+            stream.getTracks().forEach(track => track.stop());
+            mediaRecorder.stop();
         }
     </script>
 </body>
