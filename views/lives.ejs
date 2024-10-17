@@ -17,12 +17,13 @@
         let socket;
         let stream;
         let mediaRecorder;
+        let mediaConstraints = { video: true, audio: true };
 
         // Step 1: Capture the Media Stream
         async function startStreaming() {
             try {
                 // Capture media stream (e.g., webcam)
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
                 // Display the local stream
                 const videoElement = document.getElementById('local-video');
@@ -89,6 +90,10 @@
                 case 'end':
                     endLive();
                     break;
+                case 'switchCamera':
+                    let { deviceLabel } = payload;
+                    switchCamera(deviceLabel);
+                    break;
                 default:
                     console.warn('Unknown message');
                     break;
@@ -110,6 +115,28 @@
 
         function unmuteMic() {
             stream.getAudioTracks().forEach(track => track.enabled = true);
+        }
+
+        async function switchCamera(deviceLabel) {
+            let devices = await navigator.mediaDevices.enumerateDevices();
+            mediaConstraints = {
+                ...mediaConstraints,
+                video: {
+                    deviceId: devices.find(device => device.label === deviceLabel).deviceId,
+                },
+            };
+
+            let newStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+            const oldVideoTrack = stream.getVideoTracks()[0];
+            const newVideoTrack = newStream.getVideoTracks()[0];
+
+            stream.removeTrack(oldVideoTrack);
+            stream.addTrack(newVideoTrack);
+
+            newStream.getTracks().forEach(track => {
+                if (newVideoTrack.id !== track.id) track.stop();
+            });
+            oldVideoTrack.stop();
         }
 
         function endLive() {

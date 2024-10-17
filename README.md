@@ -5,7 +5,7 @@ The minimal livestream application based on HLS technology
 Check for current installation:
 ```sh
 node -v # check for node version
-npm -v # check for npm version
+npm -v # check for npm version, I recommend the node version >= 20
 ffmpeg -version # check for ffmpeg version
 ```
 Installing the necessary packages and starting the application:

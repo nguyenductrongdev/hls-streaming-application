@@ -18,12 +18,8 @@
         <iframe src="" frameborder="0" id="ifrLivestream" style="width: 100vw; height: 70vh;"></iframe>
     </section>
     <section>
-        <select id="optCamera">
-            <option value="">Select Camera</option>
-        </select>
-        <select id="optMic">
-            <option value="">Select Micro</option>
-        </select>
+        <select id="sltCamera"></select>
+        <select id="sltMic"></select>
         <button id="btnDisableCamera">disable camera</button>
         <button id="btnEnableCamera">enable camera</button>
         <button id="btnMuteMic">mute</button>
@@ -33,8 +29,7 @@
 
     <script>
         const iframe = document.getElementById('ifrLivestream');
-        let mediaVideoDevices = [];
-        let mediaAudioDevices = [];
+        const baseURL = 'http://localhost:3107';
 
         document.querySelector("#btnLives").addEventListener("click", function (e) {
             const requestOptions = {
@@ -42,7 +37,7 @@
                 redirect: "follow"
             };
 
-            fetch("http://localhost:3107/api/lives", requestOptions)
+            fetch(baseURL + '/api/lives', requestOptions)
                 .then((response) => response.json())
                 .then((result) => {
                     let { id, hostlink, viewlink } = result;
@@ -61,7 +56,7 @@
             const requestOptions = {
                 method: "GET"
             };
-            fetch("http://localhost:3107/api/lives/" + roomId, requestOptions)
+            fetch(baseURL + '/api/lives/' + roomId, requestOptions)
                 .then((response) => response.json())
                 .then((result) => {
                     let { id, hostlink, viewlink } = result;
@@ -76,19 +71,11 @@
                 devices.forEach(device => {
                     console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
                     if (device.kind === 'videoinput') {
-                        mediaVideoDevices.push(device);
+                        document.querySelector('#sltCamera').appendChild(new Option(device.label, device.label));
                     } else if (device.kind === 'audioinput') {
-                        mediaAudioDevices.push(device);
+                        document.querySelector('#sltMic').appendChild(new Option(device.label, device.label));
                     }
                 });
-            })
-            .then(() => {
-                document.querySelector('#optCamera').innerHTML = mediaVideoDevices
-                    .map(device => `<option value=${device.label}>${device.label}</option>`)
-                    .join('');
-                document.querySelector('#optMic').innerHTML = mediaAudioDevices
-                    .map(device => `<option value=${device.label}>${device.label}</option>`)
-                    .join('');
             })
             .catch(err => {
                 console.error("Error accessing media devices:", err);
@@ -108,6 +95,13 @@
 
         document.querySelector("#btnUnmuteMic").addEventListener("click", function (event) {
             iframe.contentWindow.postMessage({ name: 'unmuteMic', payload: null }, '*');
+        });
+
+        document.querySelector("#sltCamera").addEventListener("change", function (event) {
+            let payload = {
+                deviceLabel: event.target.value
+            };
+            iframe.contentWindow.postMessage({ name: 'switchCamera', payload }, '*');
         });
 
         document.querySelector("#btnEnd").addEventListener("click", function (event) {
