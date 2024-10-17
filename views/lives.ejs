@@ -10,12 +10,23 @@
 
 <body>
     <h1>Media Stream to Server</h1>
-    <select id="optCamera">
-        <option value="">Select Camera</option>
-    </select>
     <video id="local-video" autoplay muted></video>
-    <button id="btnToggleCamera" data-active="true">Toggle camera</button>
-    <button id="btnEnd">End</button>
+    <hr />
+    <div>
+        <p>Live controls</p>
+        <select id="optCamera">
+            <option value="">Select Camera</option>
+        </select>
+        <select id="optMic">
+            <option value="">Select Micro</option>
+        </select>
+        <button id="btnDisableCamera">disable camera</button>
+        <button id="btnEnableCamera">enable camera</button>
+        <button id="btnMuteMic">mute</button>
+        <button id="btnUnmuteMic">unmute</button>
+        <button id="btnEnd">End</button>
+    </div>
+
     <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script>
     <script>
         const currentUrl = new URLSearchParams(window.location.search);
@@ -42,8 +53,10 @@
                         });
                     })
                     .then(() => {
-                        console.log(mediaVideoDevices[0].label);
                         document.querySelector('#optCamera').innerHTML = mediaVideoDevices
+                            .map(device => `<option value=${device.label}>${device.label}</option>`)
+                            .join('');
+                        document.querySelector('#optMic').innerHTML = mediaAudioDevices
                             .map(device => `<option value=${device.label}>${device.label}</option>`)
                             .join('');
                     })
@@ -96,18 +109,44 @@
         // Start the streaming process when the page loads
         window.onload = startStreaming;
 
+        // Lives controls
         document.querySelector("#btnEnd").addEventListener("click", function (event) {
             socket.close();
             stream.getTracks().forEach(track => track.stop());
             mediaRecorder.stop();
         });
 
-        document.querySelector("#btnToggleCamera").addEventListener("click", function (event) {
-            let currentState = this.getAttribute('data-active') === 'true';
-            let nextState = !currentState;
-            stream.getVideoTracks().forEach(track => track.enabled = nextState);
-            this.setAttribute('data-active', String(nextState));
+        document.querySelector("#btnDisableCamera").addEventListener("click", function (event) {
+            disableCamera();
         });
+
+        document.querySelector("#btnEnableCamera").addEventListener("click", function (event) {
+            enableCamera();
+        });
+
+        document.querySelector("#btnMuteMic").addEventListener("click", function (event) {
+            muteAudio();
+        });
+
+        document.querySelector("#btnUnmuteMic").addEventListener("click", function (event) {
+            unmuteAudio();
+        });
+
+        function disableCamera() {
+            stream.getVideoTracks().forEach(track => track.enabled = false);
+        }
+
+        function enableCamera() {
+            stream.getVideoTracks().forEach(track => track.enabled = true);
+        }
+
+        function muteAudio() {
+            stream.getAudioTracks().forEach(track => track.enabled = false);
+        }
+
+        function unmuteAudio() {
+            stream.getAudioTracks().forEach(track => track.enabled = true);
+        }
     </script>
 </body>
 
