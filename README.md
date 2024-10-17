@@ -24,4 +24,15 @@ Notice: For security reasons, the media stream only acceces by localhost or http
 Apply new conf: `systemctl reload nginx`  
 Check nginx conf: `sudo nginx -t`  
 NginX conf location: `/etc/nginx/nginx.conf`  
-Find by filename: `sudo find / -type d -name "ngx_rtmp_module"`
+Find by filename: `sudo find / -type d -name "ngx_rtmp_module"`  
+Install nvm:
+```sh
+# installs nvm (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+# download and install Node.js (you may need to restart the terminal)
+nvm install 20
+# verifies the right Node.js version is in the environment
+node -v # should print `v20.18.0`
+# verifies the right npm version is in the environment
+npm -v # should print `10.8.2`
+```
