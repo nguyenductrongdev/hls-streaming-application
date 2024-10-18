@@ -23,20 +23,28 @@
     <h1>Live Stream Viewer</h1>
     <video id="video" class="video-js vjs-default-skin" controls autoplay>
         <!-- Update the src URL to match your server's IP and port -->
-        <script>
-            const currentUrl = new URLSearchParams(window.location.search);
-            let roomId = currentUrl.get("roomId") || "default";
-            document.write(`<source src="http://localhost:3107/livestreams/${roomId}/record.m3u8" type="application/x-mpegURL">`);
-        </script>
-
     </video>
     <script>
-        var player = videojs('video', {
-            autoplay: true,
-            liveui: true, // Show the live UI controls in the player
-        });
+        const video = document.getElementById('video');
+        const currentUrl = new URLSearchParams(window.location.search);
+        let roomId = currentUrl.get("roomId") || "default";
+        fetch('/api/lives/' + roomId, { method: "GET" })
+            .then((response) => response.json())
+            .then((result) => {
+                let { id, hostlink, viewlink, videolink } = result;
 
-        player.play(); // Start playing automatically
+                let sourceElement = document.createElement('source');
+                sourceElement.src = videolink;
+                sourceElement.type = 'application/x-mpegURL';
+
+                video.appendChild(sourceElement);
+                const player = videojs('video', {
+                    autoplay: true,
+                    liveui: true, // Show the live UI controls in the player
+                });
+                player.play(); // Start playing automatically
+            })
+            .catch((error) => console.error(error));
     </script>
 </body>
 
