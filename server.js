@@ -13,8 +13,11 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 const port = 3107;
+const livestreamFolder = 'livestreams';
+const m3u8Filename = 'streaming.m3u8';
+const mp4Filename = 'record.mp4';
 const PUBLIC_PATH = path.join(__dirname, 'public');
-const HLS_PATH = path.join(PUBLIC_PATH, 'livestreams');
+const HLS_PATH = path.join(PUBLIC_PATH, livestreamFolder);
 
 // Middleware to add CORS headers
 app.use((req, res, next) => {
@@ -35,7 +38,8 @@ app
         return res.json({
             id: roomId,
             hostlink: `/lives?roomId=${roomId}`,
-            viewlink: `/views?roomId=${roomId}`
+            viewlink: `/views?roomId=${roomId}`,
+            videolink: `/${livestreamFolder}/${roomId}/${m3u8Filename}`
         });
     })
     .get("/api/lives/:roomId", (req, res) => {
@@ -43,7 +47,8 @@ app
         return res.json({
             id: roomId,
             hostlink: `/lives?roomId=${roomId}`,
-            viewlink: `/views?roomId=${roomId}`
+            viewlink: `/views?roomId=${roomId}`,
+            videolink: `/${livestreamFolder}/${roomId}/${m3u8Filename}`
         });
     });
 
@@ -68,8 +73,6 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
     console.log('Client connected');
 
-    const m3u8Filename = 'streaming.m3u8';
-    const mp4Filename = 'record.mp4';
     let roomId;
     let livestreamDir;
     let ffmpegCommand;
