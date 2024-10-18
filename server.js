@@ -1,13 +1,15 @@
-const express = require('express');
-const WebSocket = require('ws');
 const fs = require('fs');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath(ffmpegPath);
-
 const path = require('path');
 const { PassThrough } = require('stream');
+const { exec } = require('child_process');
+
+const express = require('express');
+const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 const port = 3107;
@@ -66,6 +68,8 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
     console.log('Client connected');
 
+    const m3u8Filename = 'streaming.m3u8';
+    const mp4Filename = 'record.mp4';
     let roomId;
     let livestreamDir;
     let ffmpegCommand;
@@ -100,7 +104,7 @@ wss.on('connection', (ws) => {
                     '-hls_list_size 0',
                     '-hls_flags delete_segments+append_list',
                 ])
-                .output(path.join(livestreamDir, 'record.m3u8'))
+                .output(path.join(livestreamDir, m3u8Filename))
                 .on('start', () => {
                     console.log(`FFmpeg started for livestream ID: ${roomId}`);
                 })
@@ -121,6 +125,21 @@ wss.on('connection', (ws) => {
         if (inputStream) {
             inputStream.end(); // End the FFmpeg input stream
         }
+        const command = `ffmpeg -i ${path.join(livestreamDir, m3u8Filename)} -c copy ${path.join(livestreamDir, mp4Filename)}`;
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing command: ${error.message}`);
+                return;
+            }
+
+            if (stderr) {
+                console.error(`FFmpeg stderr: ${stderr}`);
+                return;
+            }
+
+            console.log(`FFmpeg stdout: ${stdout}`);
+            console.log('Video merging completed successfully.');
+        });
     });
 
     ws.on('error', (error) => {
